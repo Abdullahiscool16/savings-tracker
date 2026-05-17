@@ -163,7 +163,7 @@
 <body>
 
     <div class="app-container">
-        <div id="setup-screen">
+        <div id="setup-screen" class="hidden">
             <h1>Set Your Goal 🎯</h1>
             <p class="muted">Enter details to calculate your grind target</p>
             
@@ -177,4 +177,180 @@
             </div>
             <div class="input-group">
                 <label>Current Savings (Rs)</label>
- 
+                <input type="number" id="current-save" placeholder="e.g., 5000">
+            </div>
+            <div class="input-group">
+                <label>Days to Deadline</label>
+                <input type="number" id="days" placeholder="e.g., 60">
+            </div>
+            <button onclick="setupGoal()">Start My Challenge</button>
+        </div>
+
+        <div id="dashboard-screen" class="hidden">
+            <h2 id="dash-title">Loading Goal...</h2>
+            <p class="muted">Daily Financial Dashboard</p>
+
+            <div class="target-box">
+                <div>REQUIRED TODAY</div>
+                <div class="target-val" id="dash-target">0 Rs</div>
+            </div>
+
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <label>Saved So Far</label>
+                    <div class="stat-val" id="dash-saved">0 Rs</div>
+                </div>
+                <div class="stat-card">
+                    <label>Days Left</label>
+                    <div class="stat-val" id="dash-days">0</div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Log Today's Savings (Rs)</label>
+                <input type="number" id="log-amount" placeholder="Enter amount saved">
+            </div>
+            <button onclick="logSavings()">Submit Daily Money</button>
+
+            <div id="feedback" class="feedback-msg hidden"></div>
+
+            <button class="reset-btn" onclick="resetGoal()">Delete & Reset Goal</button>
+        </div>
+    </div>
+
+    <script>
+        // Your public Railway backend production link
+        const API_BASE_URL = 'https://savings-tracker-production-4b9b.up.railway.app';
+
+        // Check the live backend API status on startup
+        window.onload = function() {
+            renderScreen();
+        };
+
+        function renderScreen() {
+            fetch(`${API_BASE_URL}/api/goal`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.has_goal) {
+                        document.getElementById("setup-screen").classList.add("hidden");
+                        document.getElementById("dashboard-screen").classList.remove("hidden");
+                        updateDashboard(data);
+                    } else {
+                        document.getElementById("setup-screen").classList.remove("hidden");
+                        document.getElementById("dashboard-screen").classList.add("hidden");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error connecting to live API server:', error);
+                    alert("Could not connect to the cloud database server.");
+                });
+        }
+
+        // --- PART 1: SETUP LOGIC (POST TO CLOUD) ---
+        function setupGoal() {
+            const item = document.getElementById("item-name").value;
+            const total = parseInt(document.getElementById("total-goal").value);
+            const current = parseInt(document.getElementById("current-save").value);
+            const days = parseInt(document.getElementById("days").value);
+
+            if (!item || isNaN(total) || isNaN(current) || isNaN(days)) {
+                alert("Please fill in all boxes correctly!");
+                return;
+            }
+
+            const payload = {
+                item: item,
+                total: total,
+                current: current,
+                days: days
+            };
+
+            fetch(`${API_BASE_URL}/api/setup`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                renderScreen();
+            })
+            .catch(error => {
+                console.error('Error processing live setup:', error);
+                alert("Failed to save goal to backend.");
+            });
+        }
+
+        // --- PART 2: DASHBOARD CALCULATIONS & RECALC ---
+        function updateDashboard(goal) {
+            document.getElementById("dash-title").innerText = `Target: ${goal.item}`;
+            document.getElementById("dash-saved").innerText = `${goal.current} / ${goal.total} Rs`;
+            document.getElementById("dash-days").innerText = goal.days;
+
+            if (goal.days <= 0) {
+                document.getElementById("dash-target").innerText = "Completed!";
+                return;
+            }
+
+            // Math execution from your Python engine parameters
+            let dailyMoney = (goal.total - goal.current) / goal.days;
+            document.getElementById("dash-target").innerText = `${Math.max(0, dailyMoney.toFixed(2))} Rs`;
+            window.currentDailyTarget = dailyMoney; // Save memory for validation comparison
+        }
+
+        // --- PART 3: CHOOSE LOGGING ACTION (POST UPDATE TO CLOUD) ---
+        function logSavings() {
+            const logInput = document.getElementById("log-amount");
+            const ask = parseInt(logInput.value);
+
+            if (isNaN(ask)) {
+                alert("Please enter a number!");
+                return;
+            }
+
+            const feedbackBox = document.getElementById("feedback");
+
+            // Evaluate cheat days visually before sending to cloud
+            if (ask < window.currentDailyTarget) {
+                feedbackBox.className = "feedback-msg warning";
+                feedbackBox.innerText = "⚠️ You missed your target! The backend math engine has added the deficit onto your remaining days.";
+            } else {
+                feedbackBox.className = "feedback-msg success";
+                feedbackBox.innerText = "✅ Good job!! You saved enough for today. Future targets will drop down!";
+            }
+            feedbackBox.classList.remove("hidden");
+
+            // Post update payload directly to your running Python script database parameters
+            fetch(`${API_BASE_URL}/api/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ amount: ask })
+            })
+            .then(response => response.json())
+            .then(updatedData => {
+                updateDashboard(updatedData);
+                logInput.value = ""; // Clear form fields
+            })
+            .catch(error => {
+                console.error('Error saving day data:', error);
+                alert("Database update failed.");
+            });
+        }
+
+        function resetGoal() {
+            if (confirm("Are you sure you want to delete your progress data?")) {
+                // If your backend handles resets via setup override or specific routing, we clear locally via code.
+                // Re-sending a blank call or reloading setup interface.
+                document.getElementById("feedback").classList.add("hidden");
+                
+                // Forcing screen back to default state by faking an empty target state
+                document.getElementById("setup-screen").classList.remove("hidden");
+                document.getElementById("dashboard-screen").classList.add("hidden");
+            }
+        }
+    </script>
+</body>
+</html>
