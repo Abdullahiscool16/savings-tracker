@@ -224,7 +224,7 @@
             <p class="muted">Enter your name to open your private tracker</p>
             <div class="input-group">
                 <label>Username</label>
-                <input type="text" id="login-username" placeholder="e.g., abdullah">
+                <input type="text" id="login-username" maxlength="25" placeholder="e.g., abdullah">
             </div>
             <button onclick="handleLogin()">Access Dashboard</button>
         </div>
@@ -235,7 +235,7 @@
             
             <div class="input-group">
                 <label>What are you buying?</label>
-                <input type="text" id="item-name" placeholder="e.g., PS5 Slim">
+                <input type="text" id="item-name" maxlength="25" placeholder="e.g., PS5 Slim">
             </div>
             <div class="input-group">
                 <label>Total Price (Rs)</label>
@@ -258,7 +258,7 @@
             <p class="muted" id="dash-user-welcome">Daily Financial Dashboard</p>
 
             <div class="target-box">
-                <div>REQUIRED TODAY</div>
+                <div id="dash-target-label">REQUIRED TODAY</div>
                 <div class="target-val" id="dash-target">0 Rs</div>
             </div>
 
@@ -304,6 +304,13 @@
                 alert("Please type a username first!");
                 return;
             }
+
+            // Security Validation Guard
+            if (inputName.length > 20) {
+                alert("enter something shorter etc");
+                return;
+            }
+
             currentUsername = inputName.toLowerCase();
             renderScreen();
         }
@@ -319,133 +326,3 @@
 
         function renderScreen() {
             const userData = localStorage.getItem(`tracker_user_${currentUsername}`);
-            document.getElementById("login-screen").classList.add("hidden");
-            
-            if (userData) {
-                const goal = JSON.parse(userData);
-                document.getElementById("setup-screen").classList.add("hidden");
-                document.getElementById("dashboard-screen").classList.remove("hidden");
-                updateDashboard(goal);
-            } else {
-                document.getElementById("setup-screen").classList.remove("hidden");
-                document.getElementById("dashboard-screen").classList.add("hidden");
-            }
-        }
-
-        function setupGoal() {
-            const item = document.getElementById("item-name").value;
-            const total = parseInt(document.getElementById("total-goal").value);
-            const current = parseInt(document.getElementById("current-save").value);
-            const days = parseInt(document.getElementById("days").value);
-
-            if (!item || isNaN(total) || isNaN(current) || isNaN(days)) {
-                alert("Please fill in all boxes correctly!");
-                return;
-            }
-
-            const goalData = {
-                item: item,
-                total: total,
-                current: current,
-                days: days,
-                streak: 0 
-            };
-
-            localStorage.setItem(`tracker_user_${currentUsername}`, JSON.stringify(goalData));
-            renderScreen();
-        }
-
-        function updateDashboard(goal) {
-            document.getElementById("dash-user-welcome").innerText = `Account: ${currentUsername.toUpperCase()}`;
-            document.getElementById("dash-title").innerText = `Target: ${goal.item}`;
-            document.getElementById("dash-saved").innerText = `${goal.current} / ${goal.total} Rs`;
-            
-            if (goal.streak === undefined) { goal.streak = 0; }
-            
-            const streakDisplay = document.getElementById("dash-streak");
-            const fireIcon = document.getElementById("fire-icon");
-            streakDisplay.innerText = `${goal.streak} Days`;
-
-            // TikTok Scaling calculations
-            const scaleMultiplier = 1 + (goal.streak * 0.03); 
-            const clampedScale = Math.min(scaleMultiplier, 2.2); 
-            const fireRotation = goal.streak * 5; 
-
-            streakDisplay.style.transform = `scale(${clampedScale})`;
-            fireIcon.style.transform = `scale(${clampedScale}) rotate(${fireRotation}deg)`;
-            
-            // Dynamic Color Transitions (No levels, just color shifts)
-            if (goal.streak >= 30) {
-                streakDisplay.style.color = "#ff007f";
-                streakDisplay.style.textShadow = "0 0 15px rgba(255, 0, 127, 0.6)";
-            } else if (goal.streak >= 10) {
-                streakDisplay.style.color = "#ff3300";
-                streakDisplay.style.textShadow = "0 0 12px rgba(255, 51, 0, 0.4)";
-            } else {
-                streakDisplay.style.color = "#ff6a00";
-                streakDisplay.style.textShadow = "0 0 8px rgba(255, 106, 0, 0.2)";
-            }
-
-            if (goal.days <= 0) {
-                document.getElementById("dash-target").innerText = "Completed!";
-                window.currentDailyTarget = 0;
-                return;
-            }
-
-            let dailyMoney = Math.round((goal.total - goal.current) / goal.days);
-            dailyMoney = Math.max(0, dailyMoney);
-            
-            document.getElementById("dash-target").innerText = `${dailyMoney} Rs`;
-            window.currentDailyTarget = dailyMoney; 
-        }
-
-        function logSavings() {
-            const logInput = document.getElementById("log-amount");
-            const ask = parseInt(logInput.value);
-
-            if (isNaN(ask)) {
-                alert("Please enter a number!");
-                return;
-            }
-
-            const feedbackBox = document.getElementById("feedback");
-            const userData = JSON.parse(localStorage.getItem(`tracker_user_${currentUsername}`));
-            
-            if (userData.streak === undefined) { userData.streak = 0; }
-
-            if (ask < window.currentDailyTarget) {
-                feedbackBox.className = "feedback-msg warning";
-                feedbackBox.innerText = "⚠️ Target missed! The deficit has been added onto your remaining days. Streak reset.";
-                userData.streak = 0; 
-            } else {
-                feedbackBox.className = "feedback-msg success";
-                userData.streak += 1; 
-                feedbackBox.innerText = `✅ Good job!! Target met. Streak: ${userData.streak} 🔥`;
-                
-                const container = document.getElementById("streak-badge");
-                container.classList.remove("pop-animation");
-                void container.offsetWidth; 
-                container.classList.add("pop-animation");
-            }
-            feedbackBox.classList.remove("hidden");
-
-            userData.current = userData.current + ask;
-            userData.days = Math.max(0, userData.days - 1);
-
-            localStorage.setItem(`tracker_user_${currentUsername}`, JSON.stringify(userData));
-            
-            updateDashboard(userData);
-            logInput.value = ""; 
-        }
-
-        function resetGoal() {
-            if (confirm("Are you sure you want to delete your progress data?")) {
-                localStorage.removeItem(`tracker_user_${currentUsername}`);
-                document.getElementById("feedback").classList.add("hidden");
-                document.getElementById("setup-screen").classList.remove("hidden");
-                document.getElementById("dashboard-screen").classList.add("hidden");
-            }
-        }
-    </script>
-</body>
-</html>
