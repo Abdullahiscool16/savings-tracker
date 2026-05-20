@@ -33,6 +33,7 @@
             padding: 25px;
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            box-sizing: border-box;
         }
 
         h1, h2 {
@@ -133,7 +134,7 @@
 
         .target-val {
             font-size: 2rem;
-            font-weight: black;
+            font-weight: bold;
             color: var(--success-color);
             margin: 10px 0;
         }
@@ -149,25 +150,36 @@
         .success { background-color: rgba(16, 185, 129, 0.2); color: var(--success-color); border: 1px solid var(--success-color); }
         .warning { background-color: rgba(245, 158, 11, 0.2); color: var(--warning-color); border: 1px solid var(--warning-color); }
         
-        .reset-btn {
-            background-color: transparent;
-            color: #ef4444;
-            border: 1px solid #ef4444;
-            margin-top: 25px;
-            padding: 8px;
-            font-size: 0.85rem;
+        /* Fixed Footer Action Buttons Layout */
+        .action-footer {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
         }
-        .reset-btn:hover { background-color: rgba(239, 68, 68, 0.1); }
-        
+
         .switch-btn {
             background-color: transparent;
             color: var(--text-muted);
             border: 1px solid #334155;
-            margin-top: 10px;
-            padding: 8px;
+            padding: 10px;
             font-size: 0.85rem;
+            border-radius: 8px;
+            margin-top: 0;
+            width: 100%;
         }
-        .switch-btn:hover { background-color: rgba(255, 255, 255, 0.05); }
+        .switch-btn:hover { background-color: rgba(255, 255, 255, 0.05); color: white; }
+
+        .reset-btn {
+            background-color: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 10px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            margin-top: 0;
+            width: 100%;
+        }
+        .reset-btn:hover { background-color: rgba(239, 68, 68, 0.1); }
     </style>
 </head>
 <body>
@@ -204,11 +216,11 @@
                 <input type="number" id="days" placeholder="e.g., 60">
             </div>
             <button onclick="setupGoal()">Start My Challenge</button>
-            <button class="switch-btn" onclick="logout()">← Change User</button>
+            <button class="switch-btn" style="margin-top: 15px;" onclick="logout()">← Change User</button>
         </div>
 
         <div id="dashboard-screen" class="hidden">
-            <h2 id="dash-title">Loading Goal...</h2>
+            <h2 id="dash-title">Target: Loading...</h2>
             <p class="muted" id="dash-user-welcome">Daily Financial Dashboard</p>
 
             <div class="target-box">
@@ -235,21 +247,20 @@
 
             <div id="feedback" class="feedback-msg hidden"></div>
 
-            <button class="switch-btn" onclick="logout()">← Log Out / Switch Account</button>
-            <button class="reset-btn" onclick="resetGoal()">Delete & Reset Goal</button>
+            <div class="action-footer">
+                <button class="switch-btn" onclick="logout()">Logout</button>
+                <button class="reset-btn" onclick="resetGoal()">Reset</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Dynamic system memory variable
         let currentUsername = "";
 
-        // Start on login page
         window.onload = function() {
             logout();
         };
 
-        // --- PART 0: ACCOUNT HANDLING LOGIC VIA LOCALSTORAGE ---
         function handleLogin() {
             const inputName = document.getElementById("login-username").value.trim();
             if (!inputName) {
@@ -270,9 +281,7 @@
         }
 
         function renderScreen() {
-            // Fetch user record straight from the browser's persistent internal memory storage
             const userData = localStorage.getItem(`tracker_user_${currentUsername}`);
-            
             document.getElementById("login-screen").classList.add("hidden");
             
             if (userData) {
@@ -286,7 +295,6 @@
             }
         }
 
-        // --- PART 1: SETUP LOGIC (SAVING LOCAL) ---
         function setupGoal() {
             const item = document.getElementById("item-name").value;
             const total = parseInt(document.getElementById("total-goal").value);
@@ -305,12 +313,10 @@
                 days: days
             };
 
-            // Save user profile file locally
             localStorage.setItem(`tracker_user_${currentUsername}`, JSON.stringify(goalData));
             renderScreen();
         }
 
-        // --- PART 2: DASHBOARD CALCULATIONS & RECALC ---
         function updateDashboard(goal) {
             document.getElementById("dash-user-welcome").innerText = `Account: ${currentUsername.toUpperCase()}`;
             document.getElementById("dash-title").innerText = `Target: ${goal.item}`;
@@ -323,7 +329,6 @@
                 return;
             }
 
-            // Math engine calculations executed directly in browser script (rounded to whole rupees)
             let dailyMoney = Math.round((goal.total - goal.current) / goal.days);
             dailyMoney = Math.max(0, dailyMoney);
             
@@ -331,7 +336,6 @@
             window.currentDailyTarget = dailyMoney; 
         }
 
-        // --- PART 3: LOGGING ACTION ---
         function logSavings() {
             const logInput = document.getElementById("log-amount");
             const ask = parseInt(logInput.value);
@@ -352,9 +356,7 @@
             }
             feedbackBox.classList.remove("hidden");
 
-            // Retrieve current data, modify parameters, and save straight back
             const userData = JSON.parse(localStorage.getItem(`tracker_user_${currentUsername}`));
-            
             userData.current = userData.current + ask;
             userData.days = Math.max(0, userData.days - 1);
 
