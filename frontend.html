@@ -1,179 +1,356 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Savings Tracker</title>
-    <style>
-        /* Modern Mobile-First CSS Styling */
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent-color: #3b82f6;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Savings Tracker</title>
+    <style>
+        /* Modern Mobile-First CSS Styling */
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
 
-        .app-container {
-            width: 100%;
-            max-width: 400px;
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
 
-        h1, h2 {
-            text-align: center;
-            margin-top: 0;
-        }
+        h1, h2 {
+            text-align: center;
+            margin-top: 0;
+        }
 
-        .muted {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            text-align: center;
-            margin-bottom: 20px;
-        }
+        .muted {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
-        .hidden {
-            display: none !important;
-        }
+        .hidden {
+            display: none !important;
+        }
 
-        /* Form Controls */
-        .input-group {
-            margin-bottom: 15px;
-        }
+        /* Form Controls */
+        .input-group {
+            margin-bottom: 15px;
+        }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            background-color: #0f172a;
-            color: white;
-            font-size: 1rem;
-            box-sizing: border-box;
-        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background-color: #0f172a;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
 
-        input:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
 
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 10px;
-        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
 
-        button:hover {
-            background-color: #2563eb;
-        }
+        button:hover {
+            background-color: #2563eb;
+        }
 
-        /* Dashboard UI elements */
-        .stat-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
+        /* Dashboard UI elements */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
 
-        .stat-card {
-            background: #0f172a;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid #334155;
-        }
+        .stat-card {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #334155;
+        }
 
-        .stat-val {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--accent-color);
-            margin-top: 5px;
-        }
+        .stat-val {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-top: 5px;
+        }
 
-        .target-box {
-            background: linear-gradient(135deg, #1e3a8a, #0f172a);
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            margin-bottom: 20px;
-            border: 1px solid #2563eb;
-        }
+        .target-box {
+            background: linear-gradient(135deg, #1e3a8a, #0f172a);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 1px solid #2563eb;
+        }
 
-        .target-val {
-            font-size: 2rem;
-            font-weight: black;
-            color: var(--success-color);
-            margin: 10px 0;
-        }
+        .target-val {
+            font-size: 2rem;
+            font-weight: black;
+            color: var(--success-color);
+            margin: 10px 0;
+        }
 
-        .feedback-msg {
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: bold;
-            margin-top: 15px;
-        }
+        .feedback-msg {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 15px;
+        }
 
-        .success { background-color: rgba(16, 185, 129, 0.2); color: var(--success-color); border: 1px solid var(--success-color); }
-        .warning { background-color: rgba(245, 158, 11, 0.2); color: var(--warning-color); border: 1px solid var(--warning-color); }
-        
-        .reset-btn {
-            background-color: transparent;
-            color: #ef4444;
-            border: 1px solid #ef4444;
-            margin-top: 25px;
-            padding: 8px;
-            font-size: 0.85rem;
-        }
-        .reset-btn:hover { background-color: rgba(239, 68, 68, 0.1); }
-    </style>
+        .success { background-color: rgba(16, 185, 129, 0.2); color: var(--success-color); border: 1px solid var(--success-color); }
+        .warning { background-color: rgba(245, 158, 11, 0.2); color: var(--warning-color); border: 1px solid var(--warning-color); }
+        
+        .reset-btn {
+            background-color: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            margin-top: 25px;
+            padding: 8px;
+            font-size: 0.85rem;
+        }
+        .reset-btn:hover { background-color: rgba(239, 68, 68, 0.1); }
+    </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <div id="setup-screen" class="hidden">
-            <h1>Set Your Goal 🎯</h1>
-            <p class="muted">Enter details to calculate your grind target</p>
-            
-            <div class="input-group">
-                <label>What are you buying?</label>
-                <input type="text" id="item-name" placeholder="e.g., PS5 Slim">
-            </div>
-            <div class="input-group">
-                <label>Total Price (Rs)</label>
-                <input type="number" id="total-goal" placeholder="e.g., 100000">
-            </div>
-            <div class="input-group">
-                <label>Current Savings
+    <div class="app-container">
+        <div id="setup-screen" class="hidden">
+            <h1>Set Your Goal 🎯</h1>
+            <p class="muted">Enter details to calculate your grind target</p>
+            
+            <div class="input-group">
+                <label>What are you buying?</label>
+                <input type="text" id="item-name" placeholder="e.g., PS5 Slim">
+            </div>
+            <div class="input-group">
+                <label>Total Price (Rs)</label>
+                <input type="number" id="total-goal" placeholder="e.g., 100000">
+            </div>
+            <div class="input-group">
+                <label>Current Savings (Rs)</label>
+                <input type="number" id="current-save" placeholder="e.g., 5000">
+            </div>
+            <div class="input-group">
+                <label>Days to Deadline</label>
+                <input type="number" id="days" placeholder="e.g., 60">
+            </div>
+            <button onclick="setupGoal()">Start My Challenge</button>
+        </div>
+
+        <div id="dashboard-screen" class="hidden">
+            <h2 id="dash-title">Loading Goal...</h2>
+            <p class="muted">Daily Financial Dashboard</p>
+
+            <div class="target-box">
+                <div>REQUIRED TODAY</div>
+                <div class="target-val" id="dash-target">0 Rs</div>
+            </div>
+
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <label>Saved So Far</label>
+                    <div class="stat-val" id="dash-saved">0 Rs</div>
+                </div>
+                <div class="stat-card">
+                    <label>Days Left</label>
+                    <div class="stat-val" id="dash-days">0</div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Log Today's Savings (Rs)</label>
+                <input type="number" id="log-amount" placeholder="Enter amount saved">
+            </div>
+            <button onclick="logSavings()">Submit Daily Money</button>
+
+            <div id="feedback" class="feedback-msg hidden"></div>
+
+            <button class="reset-btn" onclick="resetGoal()">Delete & Reset Goal</button>
+        </div>
+    </div>
+
+    <script>
+        // Your public Railway backend production link
+        const API_BASE_URL = 'https://savings-tracker-production-4b9b.up.railway.app';
+
+        // Check the live backend API status on startup
+        window.onload = function() {
+            renderScreen();
+        };
+
+        function renderScreen() {
+            fetch(`${API_BASE_URL}/api/goal`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.has_goal) {
+                        document.getElementById("setup-screen").classList.add("hidden");
+                        document.getElementById("dashboard-screen").classList.remove("hidden");
+                        updateDashboard(data);
+                    } else {
+                        document.getElementById("setup-screen").classList.remove("hidden");
+                        document.getElementById("dashboard-screen").classList.add("hidden");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error connecting to live API server:', error);
+                    alert("Could not connect to the cloud database server.");
+                });
+        }
+
+        // --- PART 1: SETUP LOGIC (POST TO CLOUD) ---
+        function setupGoal() {
+            const item = document.getElementById("item-name").value;
+            const total = parseInt(document.getElementById("total-goal").value);
+            const current = parseInt(document.getElementById("current-save").value);
+            const days = parseInt(document.getElementById("days").value);
+
+            if (!item || isNaN(total) || isNaN(current) || isNaN(days)) {
+                alert("Please fill in all boxes correctly!");
+                return;
+            }
+
+            const payload = {
+                item: item,
+                total: total,
+                current: current,
+                days: days
+            };
+
+            fetch(`${API_BASE_URL}/api/setup`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                renderScreen();
+            })
+            .catch(error => {
+                console.error('Error processing live setup:', error);
+                alert("Failed to save goal to backend.");
+            });
+        }
+
+        // --- PART 2: DASHBOARD CALCULATIONS & RECALC ---
+        function updateDashboard(goal) {
+            document.getElementById("dash-title").innerText = `Target: ${goal.item}`;
+            document.getElementById("dash-saved").innerText = `${goal.current} / ${goal.total} Rs`;
+            document.getElementById("dash-days").innerText = goal.days;
+
+            if (goal.days <= 0) {
+                document.getElementById("dash-target").innerText = "Completed!";
+                return;
+            }
+
+            // Math execution from your Python engine parameters
+            let dailyMoney = (goal.total - goal.current) / goal.days;
+            document.getElementById("dash-target").innerText = `${Math.max(0, dailyMoney.toFixed(2))} Rs`;
+            window.currentDailyTarget = dailyMoney; // Save memory for validation comparison
+        }
+
+        // --- PART 3: CHOOSE LOGGING ACTION (POST UPDATE TO CLOUD) ---
+        function logSavings() {
+            const logInput = document.getElementById("log-amount");
+            const ask = parseInt(logInput.value);
+
+            if (isNaN(ask)) {
+                alert("Please enter a number!");
+                return;
+            }
+
+            const feedbackBox = document.getElementById("feedback");
+
+            // Evaluate cheat days visually before sending to cloud
+            if (ask < window.currentDailyTarget) {
+                feedbackBox.className = "feedback-msg warning";
+                feedbackBox.innerText = "⚠️ You missed your target! The backend math engine has added the deficit onto your remaining days.";
+            } else {
+                feedbackBox.className = "feedback-msg success";
+                feedbackBox.innerText = "✅ Good job!! You saved enough for today. Future targets will drop down!";
+            }
+            feedbackBox.classList.remove("hidden");
+
+            // Post update payload directly to your running Python script database parameters
+            fetch(`${API_BASE_URL}/api/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ amount: ask })
+            })
+            .then(response => response.json())
+            .then(updatedData => {
+                updateDashboard(updatedData);
+                logInput.value = ""; // Clear form fields
+            })
+            .catch(error => {
+                console.error('Error saving day data:', error);
+                alert("Database update failed.");
+            });
+        }
+
+        function resetGoal() {
+            if (confirm("Are you sure you want to delete your progress data?")) {
+                // If your backend handles resets via setup override or specific routing, we clear locally via code.
+                // Re-sending a blank call or reloading setup interface.
+                document.getElementById("feedback").classList.add("hidden");
+                
+                // Forcing screen back to default state by faking an empty target state
+                document.getElementById("setup-screen").classList.remove("hidden");
+                document.getElementById("dashboard-screen").classList.add("hidden");
+            }
+        }
+    </script>
+</body>
+</html>
