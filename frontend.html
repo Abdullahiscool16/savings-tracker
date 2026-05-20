@@ -158,11 +158,31 @@
             font-size: 0.85rem;
         }
         .reset-btn:hover { background-color: rgba(239, 68, 68, 0.1); }
+        
+        .switch-btn {
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 1px solid #334155;
+            margin-top: 10px;
+            padding: 8px;
+            font-size: 0.85rem;
+        }
+        .switch-btn:hover { background-color: rgba(255, 255, 255, 0.05); }
     </style>
 </head>
 <body>
 
     <div class="app-container">
+        <div id="login-screen">
+            <h1>Welcome Bro! 👋</h1>
+            <p class="muted">Enter your name to open your private tracker</p>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="login-username" placeholder="e.g., abdullah">
+            </div>
+            <button onclick="handleLogin()">Access Dashboard</button>
+        </div>
+
         <div id="setup-screen" class="hidden">
             <h1>Set Your Goal 🎯</h1>
             <p class="muted">Enter details to calculate your grind target</p>
@@ -184,11 +204,12 @@
                 <input type="number" id="days" placeholder="e.g., 60">
             </div>
             <button onclick="setupGoal()">Start My Challenge</button>
+            <button class="switch-btn" onclick="logout()">← Change User</button>
         </div>
 
         <div id="dashboard-screen" class="hidden">
             <h2 id="dash-title">Loading Goal...</h2>
-            <p class="muted">Daily Financial Dashboard</p>
+            <p class="muted" id="dash-user-welcome">Daily Financial Dashboard</p>
 
             <div class="target-box">
                 <div>REQUIRED TODAY</div>
@@ -214,6 +235,7 @@
 
             <div id="feedback" class="feedback-msg hidden"></div>
 
+            <button class="switch-btn" onclick="logout()">← Log Out / Switch Account</button>
             <button class="reset-btn" onclick="resetGoal()">Delete & Reset Goal</button>
         </div>
     </div>
@@ -221,16 +243,43 @@
     <script>
         // Your public Railway backend production link
         const API_BASE_URL = 'https://savings-tracker-production-4b9b.up.railway.app';
+        
+        // Dynamic application memory variable
+        let currentUsername = "";
 
-        // Check the live backend API status on startup
+        // Start out cleanly on the login page
         window.onload = function() {
-            renderScreen();
+            document.getElementById("login-screen").classList.remove("hidden");
+            document.getElementById("setup-screen").classList.add("hidden");
+            document.getElementById("dashboard-screen").classList.add("hidden");
         };
 
+        // --- PART 0: ACCOUNT HANDLING LOGIC ---
+        function handleLogin() {
+            const inputName = document.getElementById("login-username").value.trim();
+            if (!inputName) {
+                alert("Please type a username first!");
+                return;
+            }
+            currentUsername = inputName.toLowerCase();
+            renderScreen();
+        }
+
+        function logout() {
+            currentUsername = "";
+            document.getElementById("login-username").value = "";
+            document.getElementById("feedback").classList.add("hidden");
+            document.getElementById("login-screen").classList.remove("hidden");
+            document.getElementById("setup-screen").classList.add("hidden");
+            document.getElementById("dashboard-screen").classList.add("hidden");
+        }
+
         function renderScreen() {
-            fetch(`${API_BASE_URL}/api/goal`)
+            // Fetch goal details passing user parameters to match Python query routes
+            fetch(`${API_BASE_URL}/api/goal/${currentUsername}`)
                 .then(response => response.json())
                 .then(data => {
+                    document.getElementById("login-screen").classList.add("hidden");
                     if (data.has_goal) {
                         document.getElementById("setup-screen").classList.add("hidden");
                         document.getElementById("dashboard-screen").classList.remove("hidden");
@@ -259,6 +308,7 @@
             }
 
             const payload = {
+                username: currentUsername, // 🎯 Pass profile variable
                 item: item,
                 total: total,
                 current: current,
@@ -284,6 +334,7 @@
 
         // --- PART 2: DASHBOARD CALCULATIONS & RECALC ---
         function updateDashboard(goal) {
+            document.getElementById("dash-user-welcome").innerText = `Account: ${currentUsername.toUpperCase()}`;
             document.getElementById("dash-title").innerText = `Target: ${goal.item}`;
             document.getElementById("dash-saved").innerText = `${goal.current} / ${goal.total} Rs`;
             document.getElementById("dash-days").innerText = goal.days;
@@ -293,13 +344,12 @@
                 return;
             }
 
-            // Math execution from your Python engine parameters
-            let dailyMoney = (goal.total - goal.current) / goal.days;
-            document.getElementById("dash-target").innerText = `${Math.max(0, dailyMoney.toFixed(2))} Rs`;
-            window.currentDailyTarget = dailyMoney; // Save memory for validation comparison
+            // Backend already rounds the daily_needed logic to whole Rupees
+            document.getElementById("dash-target").innerText = `${goal.daily_needed} Rs`;
+            window.currentDailyTarget = goal.daily_needed; 
         }
 
-        // --- PART 3: CHOOSE LOGGING ACTION (POST UPDATE TO CLOUD) ---
+        // --- PART 3: LOGGING ACTION ---
         function logSavings() {
             const logInput = document.getElementById("log-amount");
             const ask = parseInt(logInput.value);
@@ -311,28 +361,30 @@
 
             const feedbackBox = document.getElementById("feedback");
 
-            // Evaluate cheat days visually before sending to cloud
             if (ask < window.currentDailyTarget) {
                 feedbackBox.className = "feedback-msg warning";
-                feedbackBox.innerText = "⚠️ You missed your target! The backend math engine has added the deficit onto your remaining days.";
+                feedbackBox.innerText = "⚠️ Target missed! The backend added the deficit to your remaining days.";
             } else {
                 feedbackBox.className = "feedback-msg success";
-                feedbackBox.innerText = "✅ Good job!! You saved enough for today. Future targets will drop down!";
+                feedbackBox.innerText = "✅ Good job!! Target met. Future daily targets will drop down!";
             }
             feedbackBox.classList.remove("hidden");
 
-            // Post update payload directly to your running Python script database parameters
+            // Post the update along with the unique user reference string
             fetch(`${API_BASE_URL}/api/update`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ amount: ask })
+                body: JSON.stringify({ 
+                    username: currentUsername, // 🎯 Tracks specifically who saved money
+                    amount: ask 
+                })
             })
             .then(response => response.json())
             .then(updatedData => {
                 updateDashboard(updatedData);
-                logInput.value = ""; // Clear form fields
+                logInput.value = ""; 
             })
             .catch(error => {
                 console.error('Error saving day data:', error);
@@ -342,11 +394,7 @@
 
         function resetGoal() {
             if (confirm("Are you sure you want to delete your progress data?")) {
-                // If your backend handles resets via setup override or specific routing, we clear locally via code.
-                // Re-sending a blank call or reloading setup interface.
                 document.getElementById("feedback").classList.add("hidden");
-                
-                // Forcing screen back to default state by faking an empty target state
                 document.getElementById("setup-screen").classList.remove("hidden");
                 document.getElementById("dashboard-screen").classList.add("hidden");
             }
