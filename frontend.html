@@ -326,3 +326,62 @@
 
         function renderScreen() {
             const userData = localStorage.getItem(`tracker_user_${currentUsername}`);
+            document.getElementById("login-screen").classList.add("hidden");
+            
+            if (userData) {
+                const goal = JSON.parse(userData);
+                document.getElementById("setup-screen").classList.add("hidden");
+                document.getElementById("dashboard-screen").classList.remove("hidden");
+                updateDashboard(goal);
+            } else {
+                document.getElementById("setup-screen").classList.remove("hidden");
+                document.getElementById("dashboard-screen").classList.add("hidden");
+            }
+        }
+
+        function setupGoal() {
+            const item = document.getElementById("item-name").value.trim();
+            const totalInput = document.getElementById("total-goal").value;
+            const currentInput = document.getElementById("current-save").value;
+            const daysInput = document.getElementById("days").value;
+
+            // Security Validation Guard across fields
+            if (item.length > 20 || totalInput.length > 20 || currentInput.length > 20 || daysInput.length > 20) {
+                alert("enter something shorter etc");
+                return;
+            }
+
+            const total = parseInt(totalInput);
+            const current = parseInt(currentInput);
+            const days = parseInt(daysInput);
+
+            if (!item || isNaN(total) || isNaN(current) || isNaN(days)) {
+                alert("Please fill in all boxes correctly!");
+                return;
+            }
+
+            const goalData = {
+                item: item,
+                total: total,
+                current: current,
+                days: days,
+                streak: 0 
+            };
+
+            localStorage.setItem(`tracker_user_${currentUsername}`, JSON.stringify(goalData));
+            renderScreen();
+        }
+
+        function updateDashboard(goal) {
+            document.getElementById("dash-user-welcome").innerText = `Account: ${currentUsername.toUpperCase()}`;
+            document.getElementById("dash-title").innerText = `Target: ${goal.item}`;
+            document.getElementById("dash-saved").innerText = `${goal.current} / ${goal.total} Rs`;
+            
+            if (goal.streak === undefined) { goal.streak = 0; }
+            
+            const streakDisplay = document.getElementById("dash-streak");
+            const fireIcon = document.getElementById("fire-icon");
+            streakDisplay.innerText = `${goal.streak} Days`;
+
+            // TikTok Scaling calculations
+            const scaleMultiplier = 1 + (goal.streak * 0.03);
