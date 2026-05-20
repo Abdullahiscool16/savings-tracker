@@ -224,7 +224,7 @@
             <p class="muted">Enter your name to open your private tracker</p>
             <div class="input-group">
                 <label>Username</label>
-                <input type="text" id="login-username" maxlength="25" placeholder="e.g., abdullah">
+                <input type="text" id="login-username" placeholder="e.g., abdullah">
             </div>
             <button onclick="handleLogin()">Access Dashboard</button>
         </div>
@@ -235,7 +235,7 @@
             
             <div class="input-group">
                 <label>What are you buying?</label>
-                <input type="text" id="item-name" maxlength="25" placeholder="e.g., PS5 Slim">
+                <input type="text" id="item-name" placeholder="e.g., PS5 Slim">
             </div>
             <div class="input-group">
                 <label>Total Price (Rs)</label>
@@ -258,7 +258,7 @@
             <p class="muted" id="dash-user-welcome">Daily Financial Dashboard</p>
 
             <div class="target-box">
-                <div id="dash-target-label">REQUIRED TODAY</div>
+                <div>REQUIRED TODAY</div>
                 <div class="target-val" id="dash-target">0 Rs</div>
             </div>
 
@@ -300,17 +300,17 @@
 
         function handleLogin() {
             const inputName = document.getElementById("login-username").value.trim();
-            if (!inputName) {
-                alert("Please type a username first!");
-                return;
-            }
-
-            // Security Validation Guard
+            
+            // Cyber Security Filter Guard
             if (inputName.length > 20) {
                 alert("enter something shorter etc");
                 return;
             }
 
+            if (!inputName) {
+                alert("Please type a username first!");
+                return;
+            }
             currentUsername = inputName.toLowerCase();
             renderScreen();
         }
@@ -340,20 +340,21 @@
         }
 
         function setupGoal() {
-            const item = document.getElementById("item-name").value.trim();
-            const totalInput = document.getElementById("total-goal").value;
-            const currentInput = document.getElementById("current-save").value;
-            const daysInput = document.getElementById("days").value;
+            const itemInput = document.getElementById("item-name").value;
+            const totalRaw = document.getElementById("total-goal").value;
+            const currentRaw = document.getElementById("current-save").value;
+            const daysRaw = document.getElementById("days").value;
 
-            // Security Validation Guard across fields
-            if (item.length > 20 || totalInput.length > 20 || currentInput.length > 20 || daysInput.length > 20) {
+            // Cyber Security Filter Guard across setup boxes
+            if (itemInput.length > 20 || totalRaw.length > 20 || currentRaw.length > 20 || daysRaw.length > 20) {
                 alert("enter something shorter etc");
                 return;
             }
 
-            const total = parseInt(totalInput);
-            const current = parseInt(currentInput);
-            const days = parseInt(daysInput);
+            const item = itemInput;
+            const total = parseInt(totalRaw);
+            const current = parseInt(currentRaw);
+            const days = parseInt(daysRaw);
 
             if (!item || isNaN(total) || isNaN(current) || isNaN(days)) {
                 alert("Please fill in all boxes correctly!");
@@ -384,4 +385,99 @@
             streakDisplay.innerText = `${goal.streak} Days`;
 
             // TikTok Scaling calculations
-            const scaleMultiplier = 1 + (goal.streak * 0.03);
+            const scaleMultiplier = 1 + (goal.streak * 0.03); 
+            const clampedScale = Math.min(scaleMultiplier, 2.2); 
+            const fireRotation = goal.streak * 5; 
+
+            streakDisplay.style.transform = `scale(${clampedScale})`;
+            fireIcon.style.transform = `scale(${clampedScale}) rotate(${fireRotation}deg)`;
+            
+            // Dynamic Color Transitions (No levels, just color shifts)
+            if (goal.streak >= 30) {
+                streakDisplay.style.color = "#ff007f";
+                streakDisplay.style.textShadow = "0 0 15px rgba(255, 0, 127, 0.6)";
+            } else if (goal.streak >= 10) {
+                streakDisplay.style.color = "#ff3300";
+                streakDisplay.style.textShadow = "0 0 12px rgba(255, 51, 0, 0.4)";
+            } else {
+                streakDisplay.style.color = "#ff6a00";
+                streakDisplay.style.textShadow = "0 0 8px rgba(255, 106, 0, 0.2)";
+            }
+
+            // Target Achieved Dynamic Output 
+            if (goal.current >= goal.total) {
+                document.getElementById("dash-target").innerText = `Target completed! Go buy your ${goal.item}`;
+                window.currentDailyTarget = 0;
+                return;
+            }
+
+            if (goal.days <= 0) {
+                document.getElementById("dash-target").innerText = "Completed!";
+                window.currentDailyTarget = 0;
+                return;
+            }
+
+            let dailyMoney = Math.round((goal.total - goal.current) / goal.days);
+            dailyMoney = Math.max(0, dailyMoney);
+            
+            document.getElementById("dash-target").innerText = `${dailyMoney} Rs`;
+            window.currentDailyTarget = dailyMoney; 
+        }
+
+        function logSavings() {
+            const logInput = document.getElementById("log-amount");
+
+            // Cyber Security Filter Guard
+            if (logInput.value.length > 20) {
+                alert("enter something shorter etc");
+                return;
+            }
+
+            const ask = parseInt(logInput.value);
+
+            if (isNaN(ask)) {
+                alert("Please enter a number!");
+                return;
+            }
+
+            const feedbackBox = document.getElementById("feedback");
+            const userData = JSON.parse(localStorage.getItem(`tracker_user_${currentUsername}`));
+            
+            if (userData.streak === undefined) { userData.streak = 0; }
+
+            if (ask < window.currentDailyTarget) {
+                feedbackBox.className = "feedback-msg warning";
+                feedbackBox.innerText = "⚠️ Target missed! The deficit has been added onto your remaining days. Streak reset.";
+                userData.streak = 0; 
+            } else {
+                feedbackBox.className = "feedback-msg success";
+                userData.streak += 1; 
+                feedbackBox.innerText = `✅ Good job!! Target met. Streak: ${userData.streak} 🔥`;
+                
+                const container = document.getElementById("streak-badge");
+                container.classList.remove("pop-animation");
+                void container.offsetWidth; 
+                container.classList.add("pop-animation");
+            }
+            feedbackBox.classList.remove("hidden");
+
+            userData.current = userData.current + ask;
+            userData.days = Math.max(0, userData.days - 1);
+
+            localStorage.setItem(`tracker_user_${currentUsername}`, JSON.stringify(userData));
+            
+            updateDashboard(userData);
+            logInput.value = ""; 
+        }
+
+        function resetGoal() {
+            if (confirm("Are you sure you want to delete your progress data?")) {
+                localStorage.removeItem(`tracker_user_${currentUsername}`);
+                document.getElementById("feedback").classList.add("hidden");
+                document.getElementById("setup-screen").classList.remove("hidden");
+                document.getElementById("dashboard-screen").classList.add("hidden");
+            }
+        }
+    </script>
+</body>
+</html>
