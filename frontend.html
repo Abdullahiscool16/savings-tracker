@@ -114,6 +114,7 @@
             border-radius: 12px;
             text-align: center;
             border: 1px solid #334155;
+            position: relative;
         }
 
         .stat-val {
@@ -121,6 +122,39 @@
             font-weight: bold;
             color: var(--accent-color);
             margin-top: 5px;
+        }
+
+        /* TikTok Scaling Streak Badge Styles */
+        .streak-container {
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .streak-fire {
+            display: inline-block;
+            transition: transform 0.4s ease;
+        }
+
+        .streak-text {
+            font-weight: 800;
+            color: #ff4500;
+            text-shadow: 0 0 10px rgba(255, 69, 0, 0.2);
+            transition: all 0.4s ease;
+        }
+
+        /* Pop animation for whenever streak updates */
+        @keyframes streakPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+
+        .pop-animation {
+            animation: streakPop 0.5s ease-out;
         }
 
         .target-box {
@@ -137,67 +171,6 @@
             font-weight: bold;
             color: var(--success-color);
             margin: 10px 0;
-        }
-
-        /* Dynamic TikTok Style Streak Cards */
-        .streak-stage-container {
-            padding: 18px;
-            border-radius: 12px;
-            text-align: center;
-            font-weight: 800;
-            letter-spacing: 1px;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            font-size: 1.1rem;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 2px solid transparent;
-        }
-
-        /* Level-Up Animation Trigger class */
-        .pop-animation {
-            transform: scale(1.08);
-        }
-
-        /* Streak Themes: Light, Bronze, Emerald, Diamond, Purple Overlord */
-        .tier-light {
-            background: linear-gradient(135deg, #334155, #1e293b);
-            color: #f1f5f9;
-            border-color: #475569;
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.05);
-        }
-
-        .tier-bronze {
-            background: linear-gradient(135deg, #7c2d12, #431407);
-            color: #ffedd5;
-            border-color: #ea580c;
-            box-shadow: 0 4px 15px rgba(234, 88, 12, 0.2);
-        }
-
-        .tier-emerald {
-            background: linear-gradient(135deg, #064e3b, #022c22);
-            color: #d1fae5;
-            border-color: #10b981;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        }
-
-        .tier-diamond {
-            background: linear-gradient(135deg, #1e3a8a, #172554);
-            color: #e0f2fe;
-            border-color: #0ea5e9;
-            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
-        }
-
-        .tier-purple {
-            background: linear-gradient(135deg, #581c87, #3b0764);
-            color: #f3e8ff;
-            border-color: #a855f7;
-            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.6);
-            animation: pulse-glow 2s infinite alternate;
-        }
-
-        @keyframes pulse-glow {
-            from { box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4); }
-            to { box-shadow: 0 4px 25px rgba(168, 85, 247, 0.8); }
         }
 
         .feedback-msg {
@@ -284,11 +257,6 @@
             <h2 id="dash-title">Target: Loading...</h2>
             <p class="muted" id="dash-user-welcome">Daily Financial Dashboard</p>
 
-            <div id="streak-tier-card" class="streak-stage-container tier-light">
-                <span id="streak-tier-text">Day 1: Level Light</span>
-                <div style="font-size: 0.75rem; font-weight: normal; margin-top: 3px; opacity: 0.85;" id="streak-counter-sub">Streak: 0 Days 🔥</div>
-            </div>
-
             <div class="target-box">
                 <div>REQUIRED TODAY</div>
                 <div class="target-val" id="dash-target">0 Rs</div>
@@ -300,8 +268,11 @@
                     <div class="stat-val" id="dash-saved">0 Rs</div>
                 </div>
                 <div class="stat-card">
-                    <label>Days Left</label>
-                    <div class="stat-val" id="dash-days">0</div>
+                    <label>Grind Streak</label>
+                    <div id="streak-badge" class="streak-container">
+                        <span id="fire-icon" class="streak-fire">🔥</span>
+                        <span id="dash-streak" class="streak-text">0 Days</span>
+                    </div>
                 </div>
             </div>
 
@@ -377,57 +348,45 @@
                 total: total,
                 current: current,
                 days: days,
-                streak: 0 // Initialize streak on creation
+                streak: 0 // Initialize tracking streak on new setups
             };
 
             localStorage.setItem(`tracker_user_${currentUsername}`, JSON.stringify(goalData));
             renderScreen();
         }
 
-        /* 👑 DYNAMIC VISUAL ENGINE FOR STREAK TIERS */
-        function applyStreakTierVisuals(streak) {
-            const card = document.getElementById("streak-tier-card");
-            const text = document.getElementById("streak-tier-text");
-            const subtext = document.getElementById("streak-counter-sub");
-
-            // Wipe out existing tier layout classes
-            card.className = "streak-stage-container";
-            subtext.innerText = `Streak: ${streak} ${streak === 1 ? 'Day' : 'Days'} 🔥`;
-
-            // Evaluate thresholds matching the animation formats
-            if (streak < 3) {
-                card.classList.add("tier-light");
-                text.innerText = "Day 1: Level Light";
-            } else if (streak >= 3 && streak < 7) {
-                card.classList.add("tier-bronze");
-                text.innerText = "Day 5: Level Bronze";
-            } else if (streak >= 7 && streak < 15) {
-                card.classList.add("tier-emerald");
-                text.innerText = "Day 10: Level Emerald";
-            } else if (streak >= 15 && streak < 30) {
-                card.classList.add("tier-diamond");
-                text.innerText = "Day 25: Level Diamond";
-            } else {
-                card.classList.add("tier-purple");
-                text.innerText = "Day 100: Level Overlord 👑";
-            }
-
-            // Trigger sleek scale pop animation effect on change
-            card.classList.add("pop-animation");
-            setTimeout(() => {
-                card.classList.remove("pop-animation");
-            }, 500);
-        }
-
         function updateDashboard(goal) {
             document.getElementById("dash-user-welcome").innerText = `Account: ${currentUsername.toUpperCase()}`;
             document.getElementById("dash-title").innerText = `Target: ${goal.item}`;
             document.getElementById("dash-saved").innerText = `${goal.current} / ${goal.total} Rs`;
-            document.getElementById("dash-days").innerText = goal.days;
+            
+            // Fallback initialization just in case old storage sets don't have it
+            if (goal.streak === undefined) { goal.streak = 0; }
+            
+            // TikTok Trend Scaling Factor engine
+            const streakDisplay = document.getElementById("dash-streak");
+            const fireIcon = document.getElementById("fire-icon");
+            streakDisplay.innerText = `${goal.streak} Days`;
 
-            // Make sure streak is defined
-            if (goal.streak === undefined) goal.streak = 0;
-            applyStreakTierVisuals(goal.streak);
+            // Calculate font weight, scaling multipliers, and colors dynamically matching high streaks
+            const scaleMultiplier = 1 + (goal.streak * 0.03); // Progressively get massive
+            const clampedScale = Math.min(scaleMultiplier, 2.2); // Cap size so it doesn't leak out of card borders
+            const fireRotation = goal.streak * 5; // Rotate slightly for aesthetic dynamic variance
+
+            streakDisplay.style.transform = `scale(${clampedScale})`;
+            fireIcon.style.transform = `scale(${clampedScale}) rotate(${fireRotation}deg)`;
+            
+            // Transition color shifts from basic orange to ultra deep neon pink/red on high tiers
+            if (goal.streak >= 30) {
+                streakDisplay.style.color = "#ff007f";
+                streakDisplay.style.textShadow = "0 0 15px rgba(255, 0, 127, 0.6)";
+            } else if (goal.streak >= 10) {
+                streakDisplay.style.color = "#ff3300";
+                streakDisplay.style.textShadow = "0 0 12px rgba(255, 51, 0, 0.4)";
+            } else {
+                streakDisplay.style.color = "#ff6a00";
+                streakDisplay.style.textShadow = "0 0 8px rgba(255, 106, 0, 0.2)";
+            }
 
             if (goal.days <= 0) {
                 document.getElementById("dash-target").innerText = "Completed!";
@@ -454,17 +413,22 @@
             const feedbackBox = document.getElementById("feedback");
             const userData = JSON.parse(localStorage.getItem(`tracker_user_${currentUsername}`));
             
-            if (userData.streak === undefined) userData.streak = 0;
+            if (userData.streak === undefined) { userData.streak = 0; }
 
-            // Process score engine updates mirroring your logic
             if (ask < window.currentDailyTarget) {
                 feedbackBox.className = "feedback-msg warning";
-                feedbackBox.innerText = "⚠️ Target missed! Deficit added to remaining days. Streak reset to 0!";
-                userData.streak = 0; 
+                feedbackBox.innerText = "⚠️ Target missed! The deficit has been added onto your remaining days. Streak reset.";
+                userData.streak = 0; // Reset streak score
             } else {
                 feedbackBox.className = "feedback-msg success";
-                userData.streak += 1; 
-                feedbackBox.innerText = `✅ Target met! Current streak: ${userData.streak} Days!`;
+                userData.streak += 1; // Increment streak score
+                feedbackBox.innerText = `✅ Good job!! Target met. Streak: ${userData.streak} 🔥`;
+                
+                // Trigger flash pop effect on streak card
+                const container = document.getElementById("streak-badge");
+                container.classList.remove("pop-animation");
+                void container.offsetWidth; // Trigger reflow layout restart trick
+                container.classList.add("pop-animation");
             }
             feedbackBox.classList.remove("hidden");
 
