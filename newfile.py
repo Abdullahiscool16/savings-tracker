@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 
-DB_FILE = "savings_memory.db"
+DB_FILE = "savings_v2.db"
 
 app = FastAPI()
 
