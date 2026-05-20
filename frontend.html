@@ -139,6 +139,67 @@
             margin: 10px 0;
         }
 
+        /* Dynamic TikTok Style Streak Cards */
+        .streak-stage-container {
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-size: 1.1rem;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid transparent;
+        }
+
+        /* Level-Up Animation Trigger class */
+        .pop-animation {
+            transform: scale(1.08);
+        }
+
+        /* Streak Themes: Light, Bronze, Emerald, Diamond, Purple Overlord */
+        .tier-light {
+            background: linear-gradient(135deg, #334155, #1e293b);
+            color: #f1f5f9;
+            border-color: #475569;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.05);
+        }
+
+        .tier-bronze {
+            background: linear-gradient(135deg, #7c2d12, #431407);
+            color: #ffedd5;
+            border-color: #ea580c;
+            box-shadow: 0 4px 15px rgba(234, 88, 12, 0.2);
+        }
+
+        .tier-emerald {
+            background: linear-gradient(135deg, #064e3b, #022c22);
+            color: #d1fae5;
+            border-color: #10b981;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .tier-diamond {
+            background: linear-gradient(135deg, #1e3a8a, #172554);
+            color: #e0f2fe;
+            border-color: #0ea5e9;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+        }
+
+        .tier-purple {
+            background: linear-gradient(135deg, #581c87, #3b0764);
+            color: #f3e8ff;
+            border-color: #a855f7;
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.6);
+            animation: pulse-glow 2s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            from { box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4); }
+            to { box-shadow: 0 4px 25px rgba(168, 85, 247, 0.8); }
+        }
+
         .feedback-msg {
             padding: 12px;
             border-radius: 8px;
@@ -186,194 +247,5 @@
 
     <div class="app-container">
         <div id="login-screen">
-            <h1>Welcome! </h1>
+            <h1>Welcome Bro! 👋</h1>
             <p class="muted">Enter your name to open your private tracker</p>
-            <div class="input-group">
-                <label>Username</label>
-                <input type="text" id="login-username" placeholder="e.g., abdullah">
-            </div>
-            <button onclick="handleLogin()">Access Dashboard</button>
-        </div>
-
-        <div id="setup-screen" class="hidden">
-            <h1>Set Your Goal 🎯</h1>
-            <p class="muted">Enter details to calculate your grind target</p>
-            
-            <div class="input-group">
-                <label>What are you buying?</label>
-                <input type="text" id="item-name" placeholder="e.g., PS5 Slim">
-            </div>
-            <div class="input-group">
-                <label>Total Price (Rs)</label>
-                <input type="number" id="total-goal" placeholder="e.g., 100000">
-            </div>
-            <div class="input-group">
-                <label>Current Savings (Rs)</label>
-                <input type="number" id="current-save" placeholder="e.g., 5000">
-            </div>
-            <div class="input-group">
-                <label>Days to Deadline</label>
-                <input type="number" id="days" placeholder="e.g., 60">
-            </div>
-            <button onclick="setupGoal()">Start My Challenge</button>
-            <button class="switch-btn" style="margin-top: 15px;" onclick="logout()">← Change User</button>
-        </div>
-
-        <div id="dashboard-screen" class="hidden">
-            <h2 id="dash-title">Target: Loading...</h2>
-            <p class="muted" id="dash-user-welcome">Daily Financial Dashboard</p>
-
-            <div class="target-box">
-                <div>REQUIRED TODAY</div>
-                <div class="target-val" id="dash-target">0 Rs</div>
-            </div>
-
-            <div class="stat-grid">
-                <div class="stat-card">
-                    <label>Saved So Far</label>
-                    <div class="stat-val" id="dash-saved">0 Rs</div>
-                </div>
-                <div class="stat-card">
-                    <label>Days Left</label>
-                    <div class="stat-val" id="dash-days">0</div>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>Log Today's Savings (Rs)</label>
-                <input type="number" id="log-amount" placeholder="Enter amount saved">
-            </div>
-            <button onclick="logSavings()">Submit Daily Money</button>
-
-            <div id="feedback" class="feedback-msg hidden"></div>
-
-            <div class="action-footer">
-                <button class="switch-btn" onclick="logout()">Logout</button>
-                <button class="reset-btn" onclick="resetGoal()">Reset</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let currentUsername = "";
-
-        window.onload = function() {
-            logout();
-        };
-
-        function handleLogin() {
-            const inputName = document.getElementById("login-username").value.trim();
-            if (!inputName) {
-                alert("Please type a username first!");
-                return;
-            }
-            currentUsername = inputName.toLowerCase();
-            renderScreen();
-        }
-
-        function logout() {
-            currentUsername = "";
-            document.getElementById("login-username").value = "";
-            document.getElementById("feedback").classList.add("hidden");
-            document.getElementById("login-screen").classList.remove("hidden");
-            document.getElementById("setup-screen").classList.add("hidden");
-            document.getElementById("dashboard-screen").classList.add("hidden");
-        }
-
-        function renderScreen() {
-            const userData = localStorage.getItem(`tracker_user_${currentUsername}`);
-            document.getElementById("login-screen").classList.add("hidden");
-            
-            if (userData) {
-                const goal = JSON.parse(userData);
-                document.getElementById("setup-screen").classList.add("hidden");
-                document.getElementById("dashboard-screen").classList.remove("hidden");
-                updateDashboard(goal);
-            } else {
-                document.getElementById("setup-screen").classList.remove("hidden");
-                document.getElementById("dashboard-screen").classList.add("hidden");
-            }
-        }
-
-        function setupGoal() {
-            const item = document.getElementById("item-name").value;
-            const total = parseInt(document.getElementById("total-goal").value);
-            const current = parseInt(document.getElementById("current-save").value);
-            const days = parseInt(document.getElementById("days").value);
-
-            if (!item || isNaN(total) || isNaN(current) || isNaN(days)) {
-                alert("Please fill in all boxes correctly!");
-                return;
-            }
-
-            const goalData = {
-                item: item,
-                total: total,
-                current: current,
-                days: days
-            };
-
-            localStorage.setItem(`tracker_user_${currentUsername}`, JSON.stringify(goalData));
-            renderScreen();
-        }
-
-        function updateDashboard(goal) {
-            document.getElementById("dash-user-welcome").innerText = `Account: ${currentUsername.toUpperCase()}`;
-            document.getElementById("dash-title").innerText = `Target: ${goal.item}`;
-            document.getElementById("dash-saved").innerText = `${goal.current} / ${goal.total} Rs`;
-            document.getElementById("dash-days").innerText = goal.days;
-
-            if (goal.days <= 0) {
-                document.getElementById("dash-target").innerText = "Completed!";
-                window.currentDailyTarget = 0;
-                return;
-            }
-
-            let dailyMoney = Math.round((goal.total - goal.current) / goal.days);
-            dailyMoney = Math.max(0, dailyMoney);
-            
-            document.getElementById("dash-target").innerText = `${dailyMoney} Rs`;
-            window.currentDailyTarget = dailyMoney; 
-        }
-
-        function logSavings() {
-            const logInput = document.getElementById("log-amount");
-            const ask = parseInt(logInput.value);
-
-            if (isNaN(ask)) {
-                alert("Please enter a number!");
-                return;
-            }
-
-            const feedbackBox = document.getElementById("feedback");
-
-            if (ask < window.currentDailyTarget) {
-                feedbackBox.className = "feedback-msg warning";
-                feedbackBox.innerText = "⚠️ Target missed! The deficit has been added onto your remaining days.";
-            } else {
-                feedbackBox.className = "feedback-msg success";
-                feedbackBox.innerText = "✅ Good job!! Target met. Future daily targets will drop down!";
-            }
-            feedbackBox.classList.remove("hidden");
-
-            const userData = JSON.parse(localStorage.getItem(`tracker_user_${currentUsername}`));
-            userData.current = userData.current + ask;
-            userData.days = Math.max(0, userData.days - 1);
-
-            localStorage.setItem(`tracker_user_${currentUsername}`, JSON.stringify(userData));
-            
-            updateDashboard(userData);
-            logInput.value = ""; 
-        }
-
-        function resetGoal() {
-            if (confirm("Are you sure you want to delete your progress data?")) {
-                localStorage.removeItem(`tracker_user_${currentUsername}`);
-                document.getElementById("feedback").classList.add("hidden");
-                document.getElementById("setup-screen").classList.remove("hidden");
-                document.getElementById("dashboard-screen").classList.add("hidden");
-            }
-        }
-    </script>
-</body>
-</html>
